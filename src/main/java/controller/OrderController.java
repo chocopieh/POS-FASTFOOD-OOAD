@@ -9,8 +9,9 @@ public class OrderController {
     private int orderCounter = 1;
 
     // UC03: Tạo đơn hàng mới
-    public void createNewOrder(String serviceType) {
-        String newOrderId = "ORD" + String.format("%04d", orderCounter++);
+   public void createNewOrder(String serviceType) {
+        // Dùng thời gian hiện tại làm hậu tố để mã đơn luôn là duy nhất, không bao giờ trùng khóa chính
+        String newOrderId = "ORD" + System.currentTimeMillis() % 10000; 
         currentOrder = new Order(newOrderId, serviceType);
         System.out.println("\n>>> HỆ THỐNG: Đã tạo đơn hàng mới [" + newOrderId + "] - " + serviceType);
     }

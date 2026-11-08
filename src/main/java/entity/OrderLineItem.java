@@ -42,5 +42,5 @@ public class OrderLineItem {
     // Hàm tính thành tiền cho từng dòng món ăn
     public double getSubTotal() {
         return product.getPrice() * quantity;
-    }
+    } 
 }

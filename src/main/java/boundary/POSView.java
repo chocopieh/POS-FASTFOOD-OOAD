@@ -30,12 +30,18 @@ public class POSView extends JFrame {
 
     // Danh sách menu tải từ Database (hoặc dùng mẫu dự phòng)
     private List<Product> menuList;
-
+    private static POSView instance;
+    
     public POSView() {
         orderCtrl = new OrderController();
         paymentCtrl = new PaymentController();
         
         orderCtrl.createNewOrder("Ăn tại chỗ");
+        instance = this; // 2. Gán instance ngay đầu hàm khởi tạo
+
+        orderCtrl = new OrderController();
+        paymentCtrl = new PaymentController();
+        
 
         // 1. TẢI MENU TỪ CƠ SỞ DỮ LIỆU SQL
         loadMenuFromDatabase();
@@ -176,6 +182,17 @@ public class POSView extends JFrame {
     // Sự kiện nút Quay lại trượt về màn hình Hóa đơn
     btnBackToOrder.addActionListener(e -> cardLayout.show(rightPanel, "BILL_PANEL"));
     }
+    public static POSView getInstance() {
+        return instance;
+    }
+    // 4. Hàm nhận tín hiệu báo xong từ Bếp
+    public void notifyOrderReady(String orderId) {
+        // Hiển thị một bảng thông báo Popup nổi lên trên màn hình Thu ngân
+        JOptionPane.showMessageDialog(this, 
+            "🔔 TINH TINH!\nBếp vừa báo: Đơn hàng [" + orderId + "] ĐÃ NẤU XONG.\nVui lòng gọi khách nhận đồ!", 
+            "THÔNG BÁO TỪ NHÀ BẾP", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
     // --- KẾT NỐI DATABASE LẤY MENU ---
     private void loadMenuFromDatabase() {
         menuList = new ArrayList<>();
@@ -206,20 +223,33 @@ public class POSView extends JFrame {
 
     // --- CÁC HÀM XỬ LÝ NGHIỆP VỤ ---
 
-    private void handleSelectProduct(Product p) {
-        if (orderCtrl.getCurrentOrder() == null || !orderCtrl.getCurrentOrder().getStatus().equals("Chờ thanh toán")) {
-            orderCtrl.createNewOrder("Ăn tại chỗ");
-        }
+        private void handleSelectProduct(Product p) {
+            if (orderCtrl.getCurrentOrder() == null || !orderCtrl.getCurrentOrder().getStatus().equals("Chờ thanh toán")) {
+                orderCtrl.createNewOrder("Ăn tại chỗ");
+            }
 
-        // Đã XÓA/ẨN phần code hiển thị Popup hỏi ghi chú (JOptionPane)
-        // để hệ thống tự động thêm món vào đơn ngay lập tức.
-        
-        // Truyền thẳng số lượng 1 và ghi chú rỗng "" xuống tầng Control
-        orderCtrl.addProductToOrder(p, 1, ""); 
-        
-        // Làm mới lại bảng bên phải
-        refreshBillTable();
-    }
+            boolean isExist = false;
+
+            // 1. Duyệt danh sách món trong đơn
+            for (OrderLineItem item : orderCtrl.getCurrentOrder().getLineItems()) {
+                if (item.getProduct().getProductName().trim().equalsIgnoreCase(p.getProductName().trim())) {
+
+                    // Chỉ cần tăng số lượng, tiền sẽ tự động được getSubTotal() tính lại!
+                    item.setQuantity(item.getQuantity() + 1);
+
+                    isExist = true;
+                    break; 
+                }
+            }
+
+            // 2. Nếu món chưa từng có trong đơn -> Thêm dòng mới
+            if (!isExist) {
+                orderCtrl.addProductToOrder(p, 1, ""); 
+            }
+
+            // 3. Làm mới bảng hiển thị (tổng tiền sẽ tự động nhảy số)
+            refreshBillTable();
+        }
 
    private void refreshBillTable() {
         if (orderCtrl.getCurrentOrder() != null && tableModel != null) {
@@ -264,8 +294,16 @@ public class POSView extends JFrame {
                 try {
                     double cash = Double.parseDouble(input);
                     if (cash >= total) {
+                        // 1. Lưu đơn vào SQL
                         paymentCtrl.processCashPayment(orderCtrl.getCurrentOrder(), cash);
+                        
                         JOptionPane.showMessageDialog(this, "THANH TOÁN THÀNH CÔNG!\nTiền thừa trả khách: " + (cash - total) + "đ\n(Đơn đã đẩy xuống bếp)");
+                        
+                        // 2. SỬA Ở ĐÂY: Đánh thức màn hình bếp lấy dữ liệu mới từ SQL
+                        if (boundary.KitchenView.getInstance() != null) {
+                            boundary.KitchenView.getInstance().refreshKitchenBoard();
+                        }
+                        
                         resetPOS();
                     } else {
                         JOptionPane.showMessageDialog(this, "LỖI: Khách đưa thiếu tiền!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
@@ -279,7 +317,7 @@ public class POSView extends JFrame {
         }
     }
 
-    private void handleQRCheckout() {
+   private void handleQRCheckout() {
         if (orderCtrl.getCurrentOrder() != null && orderCtrl.getOrderTotal() > 0) {
             double total = orderCtrl.getOrderTotal();
             
@@ -290,8 +328,16 @@ public class POSView extends JFrame {
                 JOptionPane.INFORMATION_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
+                // 1. Lưu đơn vào SQL
                 paymentCtrl.processQRPayment(orderCtrl.getCurrentOrder());
+                
                 JOptionPane.showMessageDialog(this, "GIAO DỊCH QR THÀNH CÔNG!\n(Đơn đã đẩy xuống bếp)");
+                
+                // 2. SỬA Ở ĐÂY: Đánh thức màn hình bếp lấy dữ liệu mới từ SQL
+                if (boundary.KitchenView.getInstance() != null) {
+                    boundary.KitchenView.getInstance().refreshKitchenBoard();
+                }
+                
                 resetPOS();
             } else {
                 JOptionPane.showMessageDialog(this, "Giao dịch QR đã bị hủy hoặc chưa nhận được tiền.", "Thông báo", JOptionPane.WARNING_MESSAGE);

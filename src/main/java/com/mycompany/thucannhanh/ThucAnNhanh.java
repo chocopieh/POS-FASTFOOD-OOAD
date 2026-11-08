@@ -4,9 +4,10 @@ import boundary.POSView;
 
 public class ThucAnNhanh {
     public static void main(String[] args) {
-        // Khởi động Cửa sổ giao diện POS (Boundary)
-        java.awt.EventQueue.invokeLater(() -> {
-            new POSView().setVisible(true);
-        });
-    }
+     // 1. Mở cửa sổ Bếp (KDS)
+     new boundary.KitchenView().setVisible(true);
+
+     // 2. Mở cửa sổ Thu ngân (POS)
+     new boundary.POSView().setVisible(true);
+ }
 }

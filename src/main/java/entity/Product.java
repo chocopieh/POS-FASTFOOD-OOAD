@@ -28,4 +28,8 @@ public class Product {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public Object getProductID() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }

@@ -1,4 +1,5 @@
 boundary\POSView.class
+controller\KitchenController.class
 entity\Product.class
 entity\Order.class
 database\DatabaseConnection.class
@@ -7,3 +8,4 @@ com\mycompany\thucannhanh\ThucAnNhanh.class
 controller\OrderController.class
 controller\PaymentController.class
 entity\OrderLineItem.class
+boundary\KitchenView.class

@@ -37,4 +37,13 @@ public class Order {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public List<OrderLineItem> getLineItems() { return lineItems; }
+    // Lấy loại dịch vụ (Ăn tại chỗ/Mang đi) để PaymentController lưu xuống SQL
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    // Dùng cho KitchenController khi lấy đơn từ SQL lên và gán lại mã ID
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
 }
